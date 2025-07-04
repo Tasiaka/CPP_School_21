@@ -1,3 +1,4 @@
+#define _DEFAULT_SOURCE
 #include "../../brick_game/common/brick_game.h"
 #include "design.h"
 #include <ncurses.h>
