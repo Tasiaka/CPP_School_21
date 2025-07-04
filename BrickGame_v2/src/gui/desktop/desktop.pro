@@ -1,0 +1,12 @@
+QT += core gui widgets
+CONFIG += c++17
+TARGET = BrickGameGUI
+SOURCES += main.cpp mainwindow.cpp gamewidget.cpp
+HEADERS += mainwindow.h gamewidget.h
+FORMS += mainwindow.ui
+INCLUDEPATH += ../..
+LIBS += -L../../../build
+QMAKE_LFLAGS += -Wl,-rpath,'@executable_path/../'
+DESTDIR = ../../../build
+OBJECTS_DIR = ../../../build/qt_obj
+MOC_DIR = ../../../build/qt_moc
