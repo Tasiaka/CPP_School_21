@@ -1,4 +1,3 @@
-#include "../../brick_game/common/brick_game.h"
 #include "design.h"
 #include <ncurses.h>
 #include <dlfcn.h>   // Для динамической загрузки

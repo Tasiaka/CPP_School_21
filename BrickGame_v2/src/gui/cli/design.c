@@ -1,7 +1,6 @@
 #include <ncurses.h>
 #include "../../brick_game/tetris/tetris.h" // Подключаем наш главный заголовочный файл с логикой
 
-// Прототипы статических функций
 static void SIDES(void);
 static void GAME_PAGE_STAT(GameInfo_t data_tetris);
 static void FIELD(GameInfo_t data_tetris);

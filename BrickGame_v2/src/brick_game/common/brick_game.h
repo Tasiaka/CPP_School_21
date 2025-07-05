@@ -1,33 +1,42 @@
-#ifndef SRC_BRICK_GAME_COMMON_BRICK_GAME_API_H_
-#define SRC_BRICK_GAME_COMMON_BRICK_GAME_API_H_
+#ifndef BRICK_GAME_COMMON_BRICK_GAME_H
+#define BRICK_GAME_COMMON_BRICK_GAME_H
 
 #include <stdbool.h>
-
-typedef enum {
-  Start, Pause, Terminate, Left, Right, Up, Down, Action
-} UserAction_t;
-
-typedef struct {
-  int **field;
-  int **next;
-  int score;
-  int high_score;
-  int level;
-  int speed;
-  int pause;
-} GameInfo_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void initGame();
-void destroyGame();
+// Константы «кнопок»
+typedef enum {
+    Start,
+    Pause,
+    Terminate,
+    Left,
+    Right,
+    Up,
+    Down,
+    Action
+} UserAction_t;
+
+// Информация для отрисовки
+typedef struct {
+    int **field;      // игровое поле [20][10]
+    int **next;       // «next» для Tetris (или NULL для Snake)
+    int score;        // текущие очки
+    int high_score;   // рекорд
+    int level;        // уровень (Tetris)
+    int speed;        // скорость (если нужна)
+    int pause;        // флаг паузы/выхода
+} GameInfo_t;
+
+// C-API, реализованное в head.c (tetris) и в твоей snake-библиотеке
+void initGame(void);
+void destroyGame(void);
 void userInput(UserAction_t action, bool hold);
-GameInfo_t updateCurrentState();
+GameInfo_t updateCurrentState(void);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif  // SRC_BRICK_GAME_COMMON_BRICK_GAME_API_H_
+#endif  // BRICK_GAME_COMMON_BRICK_GAME_H
