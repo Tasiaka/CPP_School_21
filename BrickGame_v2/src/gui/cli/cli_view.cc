@@ -50,7 +50,7 @@ void DrawKeys(bool snake_active) {
   } else {
     mvaddstr(3, 30, "SPACE/UP - ROTATE");
     mvaddstr(4, 30, "p/P - PAUSE/RESUME");
-    mvaddstr(5, 30, "<- / -> MOVE, DOWN - SOFT DROP");
+    mvaddstr(5, 30, "<- / -> MOVE, DOWN - FAST DROP");
   }
 }
 
