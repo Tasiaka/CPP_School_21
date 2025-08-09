@@ -1,47 +1,52 @@
-// snakeModel.h
-#ifndef SNAKEMODEL_H
-#define SNAKEMODEL_H
+#ifndef SRC_BRICK_GAME_SNAKE_MODEL_H_
+#define SRC_BRICK_GAME_SNAKE_MODEL_H_
 
-#include <deque>
-#include <vector>
+#include <list>
+#include "../common/brick_game.h"
 
 namespace s21 {
 
-struct Coord {
-    int x, y;
-    bool operator==(const Coord& other) const { return x == other.x && y == other.y; }
-};
+enum class Direction { Up, Down, Left, Right };
+enum class GameState { StartScreen, Spawning, Moving, AppleEaten, Collision, Pause, GameOver };
 
-enum Direction { UP, RIGHT, DOWN, LEFT };
-enum SnakeState { WAITING, RUNNING, WIN, LOSE };
+struct Point {
+    int x, y;
+    bool operator==(const Point& other) const { return x == other.x && y == other.y; }
+};
 
 class SnakeModel {
- public:
+public:
     SnakeModel();
-    void Reset();
-    void Step();
-    void TurnLeft();
-    void TurnRight();
-    void SetFast(bool fast);
+    void update();
+    GameState getState() const;
+    const std::list<Point>& getSnake() const;
+    Point getApple() const;
+    int getScore() const;
+    int getHighScore() const;
+    int getLevel() const;
+    void setDirection(Direction new_direction);
+    void togglePause();
+    void startGame();
+    void restartGame();
 
-    SnakeState GetState() const;
-    std::vector<std::vector<int>>& GetField();
-    int GetScore() const;
+private:
+    void performStateAction();
+    void stateAction_Spawning();
+    void stateAction_AppleEaten();
+    void stateAction_Collision();
+    void initGame();
+    void moveSnake();
+    void spawnApple();
+    bool checkCollision();
 
- private:
-    void PlaceApple();
-    bool Collides(const Coord& pos) const;
-
- private:
-    std::deque<Coord> snake_;
-    Coord apple_;
-    Direction dir_;
-    SnakeState state_;
-    std::vector<std::vector<int>> field_;
-    int score_ = 0;
-    bool fast_ = false;
+    GameState state_;
+    Direction direction_;
+    std::list<Point> snake_;
+    Point apple_;
+    int score_, high_score_, level_, speed_ms_;
+    long long last_update_time_;
+    const int width_ = 10, height_ = 20;
 };
 
-}  // namespace s21
-
+}
 #endif

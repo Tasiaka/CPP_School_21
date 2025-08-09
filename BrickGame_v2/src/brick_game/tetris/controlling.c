@@ -49,10 +49,10 @@ void MainState(FullGameStat *data_tetris_add) {
 void RESTARTing(FullGameStat *data_tetris_add) {
   for (int i = 0; i < 20; i++)
     for (int j = 0; j < 10; j++)
-      data_tetris_add->MotionField[i][j] = 0;
+      data_tetris_add->MotionField[i][j] = 0;  // перезагрузка статичного поля
   for (int i = 0; i < 20; i++)
     for (int j = 0; j < 10; j++)
-      data_tetris_add->UsedField[i][j] = 0;
+      data_tetris_add->UsedField[i][j] = 0;  // перезагрузка статичного поля
   data_tetris_add->data_tetris.score = 0;
   data_tetris_add->data_tetris.pause = 0;
   data_tetris_add->data_tetris.level = 1;
@@ -63,7 +63,7 @@ static void STARTing(FullGameStat *data_tetris_add) {
     switch (data_tetris_add->input) {
       case Start:
         if (data_tetris_add->data_tetris.pause ==
-            2) {
+            2) {  // после game_over pause = 2
           RESTARTing(data_tetris_add);
         }
         Initialization(data_tetris_add);
@@ -89,11 +89,9 @@ static void SPAWNing(FullGameStat *data_tetris_add) {
 
 static void MOVing(FullGameStat *data_tetris_add) {
   if (data_tetris_add->NewInput) switch (data_tetris_add->input) {
-      // ИЗМЕНЕНИЕ ЗДЕСЬ:
-      // Теперь и Action, и Up вызывают вращение.
-      case Up:
       case Action:
         MainActFunc(data_tetris_add);
+      case Up:
         break;
       case Down:
         data_tetris_add->state = SHIFTING;
@@ -158,16 +156,11 @@ static void ATTACHing(FullGameStat *data_tetris_add) {
 
 static void FINISHing(FullGameStat *data_tetris_add) {
   data_tetris_add->state = START;
-  data_tetris_add->data_tetris.pause = 2;
+  data_tetris_add->data_tetris.pause = 2;  // game_over
 }
 
 static void EXITing(FullGameStat *data_tetris_add) {
   RemoveMemoryForField(&(data_tetris_add->data_tetris.field), 20);
   RemoveMemoryForField(&(data_tetris_add->data_tetris.next), 4);
-  data_tetris_add->data_tetris.pause = 3;
-}
-
-void reset_tetris_game_state(void) {
-    FullGameStat *data = get_current_data_tetris_add();
-    *data = (FullGameStat){0}; 
+  data_tetris_add->data_tetris.pause = 3;  // terminate app
 }

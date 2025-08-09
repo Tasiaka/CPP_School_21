@@ -1,33 +1,22 @@
-// snakeController.h
-#ifndef SNAKECONTROLLER_H
-#define SNAKECONTROLLER_H
-
+#ifndef SRC_BRICK_GAME_SNAKE_CONTROLLER_H_
+#define SRC_BRICK_GAME_SNAKE_CONTROLLER_H_
 #include "model.h"
-#include "../common/brick_game.h"
-
+#include <memory>
 namespace s21 {
-
-class SnakeController {
- private:
-    SnakeModel* model_;
-
- public:
-    explicit SnakeController(SnakeModel* model);
-    ~SnakeController();
-    void Start();
-    void Step();
-    void TurnLeft();
-    void TurnRight();
-    void SetFast(bool fast);
-
-    
-    void ProcessInput(UserAction_t action, bool hold);
-    void Tick();                // делает один шаг
-    GameInfo_t GetState() const;
-
-
+class GameController {
+public:
+    GameController(std::unique_ptr<SnakeModel> model);
+    ~GameController();
+    void handleUserInput(UserAction_t action);
+    GameInfo_t getGameInfo();
+private:
+    void updateModel();
+    void copyField(int** dest);
+    void allocateField(int*** field, int rows, int cols);
+    void freeField(int*** field, int rows);
+    std::unique_ptr<SnakeModel> model_;
+    GameInfo_t game_info_;
 };
+}
+#endif 
 
-}  // namespace s21
-
-#endif
