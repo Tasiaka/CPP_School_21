@@ -74,7 +74,7 @@ void DrawGame(const GameInfo_t& gi) {
 
 static bool actionActive = false;
 static unsigned long long lastAms = 0;
-static const int ActionReleaseMs = 250;  // 200–300 мс обычно самое оно
+static const int ActionReleaseMs = 250; 
 
 static unsigned long long NowMs() {
   using namespace std::chrono;
@@ -108,14 +108,13 @@ void GameLoopCli() {
     gi = updateCurrentState();
     DrawGame(gi);
 
-    int ch = getch();                 // halfdelay(1) ~ 100 мс
+    int ch = getch();              
     if (ch != ERR) ProcessInputFromNcurses(ch);
 
-    // отпускание SPACE — не пришёл автоповтор какое-то время
     unsigned long long now = NowMs();
     if (actionActive && (now - lastAms) > (unsigned)ActionReleaseMs) {
       actionActive = false;
-      userInput(Action, false);       // выключили ускорение
+      userInput(Action, false);    
     }
   }
 }

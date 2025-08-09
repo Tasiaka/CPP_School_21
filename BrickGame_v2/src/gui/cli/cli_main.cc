@@ -5,7 +5,7 @@
 int main() {
   initscr();
   cbreak();
-  halfdelay(1);           // опрашиваем часто; тайминг в FSM
+  halfdelay(1);          
   keypad(stdscr, TRUE);
   noecho();
 

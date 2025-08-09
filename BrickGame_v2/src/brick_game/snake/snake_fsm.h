@@ -1,4 +1,3 @@
-
 #ifndef SNAKE_FSM
 #define SNAKE_FSM
 
