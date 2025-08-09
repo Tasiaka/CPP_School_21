@@ -1,4 +1,3 @@
-// score.c
 #include "tetris.h"
 #include <stdio.h>
 
@@ -44,7 +43,7 @@ void CalculateScore(FullGameStat *data_tetris_add) {
 
     if (data_tetris_add->data_tetris.score > data_tetris_add->data_tetris.high_score) {
         data_tetris_add->data_tetris.high_score = data_tetris_add->data_tetris.score;
-        FILE *file = fopen("BestScore", "w");
+        FILE *file = fopen("BestScore_Tetris", "w");
         if (file) {
             fprintf(file, "%d", data_tetris_add->data_tetris.high_score);
             fclose(file);

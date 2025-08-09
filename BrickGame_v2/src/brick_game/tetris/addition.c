@@ -7,7 +7,7 @@ static unsigned long long NowTime();
 static void BestScore(FullGameStat *data_tetris_add) {
   FILE *file = NULL;
   int high_score = 0;
-  file = fopen("BestScore", "r");
+  file = fopen("BestScore_Tetris", "r");
   if (file) {
     fscanf(file, "%d", &high_score);
     data_tetris_add->data_tetris.high_score = high_score;

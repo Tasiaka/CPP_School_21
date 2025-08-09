@@ -1,56 +1,133 @@
-PROJECT=brickgame
-CXX?=g++
-CXXFLAGS=-std=c++17 -Wall -Wextra -Werror -pedantic -O2
-LDFLAGS=-lncurses
+# ===== Project =====
+PROJECT        := brickgame
+PREFIX         ?= /usr/local
+DESTDIR        ?=
+SRC_DIR        := src
+BUILD_DIR      := build
+BIN_DIR        := bin
 
-SRC_DIR=src
-BG_DIR=$(SRC_DIR)/brick_game
-SNAKE_DIR=$(BG_DIR)/snake
-CLI_DIR=$(SRC_DIR)/gui/cli
-BUILD_DIR=build
-BIN_DIR=bin
-PREFIX?=/usr/local
+# ===== Toolchain =====
+CXX            ?= c++
+CC             ?= cc
+AR             ?= ar
+RANLIB         ?= ranlib
 
-LIB=$(BUILD_DIR)/libbrickgame_snake.a
-CLI=$(BIN_DIR)/brickgame_cli
+# ===== Flags =====
+CXXFLAGS       ?= -std=c++17 -Wall -Wextra -Werror -pedantic -O2
+CFLAGS         ?= -std=c11  -Wall -Wextra -Werror -O2
+CPPFLAGS       ?= -I$(SRC_DIR)
+LIBS           ?= -lncurses
 
-SNAKE_SRC=$(SNAKE_DIR)/snake_model.cc $(SNAKE_DIR)/snake_fsm.cc $(SNAKE_DIR)/snake_controller.cc $(SNAKE_DIR)/snake_adapter_c_api.cc
-CLI_SRC=$(CLI_DIR)/cli_view.cc $(CLI_DIR)/cli_main.cc
-SNAKE_OBJ=$(SNAKE_SRC:%.cc=$(BUILD_DIR)/%.o)
-CLI_OBJ=$(CLI_SRC:%.cc=$(BUILD_DIR)/%.o)
+# ===== Paths =====
+SNAKE_DIR      := $(SRC_DIR)/brick_game/snake
+TETRIS_DIR     := $(SRC_DIR)/brick_game/tetris
+CLI_DIR        := $(SRC_DIR)/gui/cli
 
-all: $(CLI)
+# ===== Targets =====
+LIB_SNAKE      := $(BUILD_DIR)/libbrickgame_snake.a
+LIB_TETRIS     := $(BUILD_DIR)/libbrickgame_tetris.a
+CLI_BIN        := $(BIN_DIR)/brickgame_cli
 
+# ===== Sources =====
+SNAKE_SRC := \
+  $(SNAKE_DIR)/snake_model.cc \
+  $(SNAKE_DIR)/snake_fsm.cc \
+  $(SNAKE_DIR)/snake_controller.cc \
+  $(SNAKE_DIR)/snake_adapter_c_api.cc
+
+CLI_SRC := \
+  $(CLI_DIR)/cli_view.cc \
+  $(CLI_DIR)/cli_main.cc \
+  $(CLI_DIR)/cli_hub.cc
+
+# Важно: из v1 тетриса НЕ тянем старые CLI/MAIN (design.c, main.c)
+TETRIS_SRC := \
+  $(TETRIS_DIR)/addition.c \
+  $(TETRIS_DIR)/controlling.c \
+  $(TETRIS_DIR)/figure.c \
+  $(TETRIS_DIR)/tetris_adapter_cli.c\
+  $(TETRIS_DIR)/moving.c \
+  $(TETRIS_DIR)/score.c
+
+# ===== Objects =====
+SNAKE_OBJ   := $(SNAKE_SRC:%.cc=$(BUILD_DIR)/%.o)
+CLI_OBJ     := $(CLI_SRC:%.cc=$(BUILD_DIR)/%.o)
+TETRIS_OBJ  := $(TETRIS_SRC:%.c=$(BUILD_DIR)/%.o)
+
+# ===== Phony =====
+.PHONY: all clean install uninstall dist dvi tests run
+
+# ===== Default =====
+all: $(CLI_BIN)
+
+# ===== Build rules =====
 $(BUILD_DIR)/%.o: %.cc
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -I$(SRC_DIR) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
-$(LIB): $(SNAKE_OBJ)
+# Переименовываем userInput/updateCurrentState тетриса в TetrisUserInput/TetrisUpdateCurrentState
+$(BUILD_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
-	ar rcs $@ $^
+	$(CC) $(CFLAGS) $(CPPFLAGS) \
+		-DuserInput=TetrisUserInput \
+		-DupdateCurrentState=TetrisUpdateCurrentState \
+		-c $< -o $@
 
-$(CLI): $(LIB) $(CLI_OBJ)
+$(LIB_SNAKE): $(SNAKE_OBJ)
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(CLI_OBJ) $(LIB) $(LDFLAGS) -o $@
+	$(AR) rcs $@ $^
+	$(RANLIB) $@ >/dev/null 2>&1 || true
 
+# Позволяем выключить сборку тетриса флагом NO_TETRIS=1
+ifeq ($(NO_TETRIS),1)
+TETRIS_SWITCH :=
+else
+TETRIS_SWITCH := $(LIB_TETRIS)
+endif
+
+$(LIB_TETRIS): $(TETRIS_OBJ)
+	@mkdir -p $(dir $@)
+	$(AR) rcs $@ $^
+	$(RANLIB) $@ >/dev/null 2>&1 || true
+
+$(CLI_BIN): $(LIB_SNAKE) $(TETRIS_SWITCH) $(CLI_OBJ)
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(CLI_OBJ) $(LIB_SNAKE) $(TETRIS_SWITCH) $(LIBS) -o $@
+
+# ===== Convenience =====
+run: $(CLI_BIN)
+	./$(CLI_BIN)
+
+# ===== Install / Uninstall =====
 install: all
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	@mkdir -p $(DESTDIR)$(PREFIX)/lib
-	@cp -f $(CLI) $(DESTDIR)$(PREFIX)/bin/
-	@cp -f $(LIB) $(DESTDIR)$(PREFIX)/lib/
+	@cp -f $(CLI_BIN) $(DESTDIR)$(PREFIX)/bin/
+	@cp -f $(LIB_SNAKE) $(DESTDIR)$(PREFIX)/lib/
+ifneq ($(NO_TETRIS),1)
+	@cp -f $(LIB_TETRIS) $(DESTDIR)$(PREFIX)/lib/
+endif
+	@echo "Installed to $(DESTDIR)$(PREFIX)"
 
 uninstall:
-	@rm -f $(DESTDIR)$(PREFIX)/bin/brickgame_cli
-	@rm -f $(DESTDIR)$(PREFIX)/lib/libbrickgame_snake.a
+	@rm -f $(DESTDIR)$(PREFIX)/bin/$(notdir $(CLI_BIN))
+	@rm -f $(DESTDIR)$(PREFIX)/lib/$(notdir $(LIB_SNAKE))
+ifneq ($(NO_TETRIS),1)
+	@rm -f $(DESTDIR)$(PREFIX)/lib/$(notdir $(LIB_TETRIS))
+endif
+	@echo "Uninstalled."
 
-clean:
-	@rm -rf $(BUILD_DIR) $(BIN_DIR) dist.tar.gz
+# ===== Docs / Dist / Tests =====
+dvi:
+	@echo "Generate docs here (e.g., doxygen)."
 
 dist:
-	@tar czf dist.tar.gz src Makefile README.md
-
-dvi:
-	@echo "Generate docs here (e.g., doxygen)"; true
+	@tar czf $(PROJECT).tar.gz $(SRC_DIR) Makefile README.md || \
+		tar czf $(PROJECT).tar.gz $(SRC_DIR) Makefile
 
 tests:
-	@echo "Place unit tests here (e.g., gtest)"; true
+	@echo "Place unit tests here (e.g., gtest)."
+
+# ===== Clean =====
+clean:
+	@rm -rf $(BUILD_DIR) $(BIN_DIR) $(PROJECT).tar.gz

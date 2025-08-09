@@ -1,15 +1,14 @@
 #include <ncurses.h>
-#include "../../brick_game/common/common.h"
 #include "cli_view.h"
 
 int main() {
   initscr();
   cbreak();
-  halfdelay(1);          
-  keypad(stdscr, TRUE);
   noecho();
+  keypad(stdscr, TRUE);
+  halfdelay(1);
 
-  GameLoopCli();
+  MainMenuLoop();
 
   endwin();
   return 0;

@@ -6,7 +6,7 @@
 namespace s21 {
 
 namespace {
-constexpr const char* kHighScoreFile = "BestScore"; 
+constexpr const char* kHighScoreFile   = "BestScore_Snake";
 }
 
 SnakeModel::SnakeModel() : rng_(std::random_device{}()) { InitFieldBuffers(); Reset(); }
