@@ -13,6 +13,6 @@ GameInfo_t UpdateActiveGameState();
 const char* ActiveGameName();
 bool IsSnakeActive();
 
-} 
+}  // namespace s21
 
-#endif 
+#endif

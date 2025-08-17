@@ -1,6 +1,5 @@
 #include "tetris.h"
 
-
 void TetrisUserInput(UserAction_t user_input, bool hold) {
   (void)hold;
   FullGameStat *st = get_current_data_tetris_add();

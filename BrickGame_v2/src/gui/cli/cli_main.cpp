@@ -1,4 +1,5 @@
 #include <ncurses.h>
+
 #include "cli_view.h"
 
 int main() {

@@ -3,9 +3,8 @@
 
 #include "../../brick_game/common/common.h"
 
-
 void DrawGame(const GameInfo_t& gi);
-void GameLoopCli();        
-void MainMenuLoop();               
+void GameLoopCli();
+void MainMenuLoop();
 
-#endif 
+#endif

@@ -1,15 +1,15 @@
 #ifndef TETRIS
 #define TETRIS
 
+#include <math.h>
 #include <ncurses.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <math.h>
-#include "../common/common.h"
 
+#include "../common/common.h"
 
 void userInput(UserAction_t action, bool hold);
 GameInfo_t updateCurrentState(void);
@@ -50,9 +50,9 @@ typedef struct {
   bool TimeStart;
   bool Allocation;
   bool BestScoreR;
-  int score;   
-  int high_score;    
-  int level;         
+  int score;
+  int high_score;
+  int level;
   int drop_interval;
 } FullGameStat;
 

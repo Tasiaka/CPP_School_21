@@ -59,8 +59,7 @@ void CopyBrickToMoveField(FullGameStat *data_tetris_add) {
   int x = data_tetris_add->figure.x;
   int y = data_tetris_add->figure.y;
   for (int i = 0; i < 20; i++)
-    for (int j = 0; j < 10; j++)
-      data_tetris_add->MotionField[i][j] = 0; 
+    for (int j = 0; j < 10; j++) data_tetris_add->MotionField[i][j] = 0;
   for (int i = 0; i < 4; i++)
     for (int j = 0; j < 4; j++)
       if (data_tetris_add->figure.brick[i][j] == 1)
@@ -73,7 +72,8 @@ bool ControlFalling(FullGameStat *data_tetris_add) {
     data_tetris_add->Time = NowTime();
     data_tetris_add->TimeStart = true;
   }
-  long long unsigned int LevelSpeed = 1000 / (data_tetris_add->data_tetris.level * 2);
+  long long unsigned int LevelSpeed =
+      1000 / (data_tetris_add->data_tetris.level * 2);
   if (NowTime() - data_tetris_add->Time >= LevelSpeed &&
       data_tetris_add->state != EXIT_STATE &&
       data_tetris_add->data_tetris.pause != 1) {

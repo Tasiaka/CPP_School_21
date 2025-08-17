@@ -9,10 +9,11 @@ class SnakeController {
   SnakeController();
   void UserInput(UserAction_t action, bool hold);
   GameInfo_t Update();
+
  private:
   SnakeModel model_;
   SnakeFSM fsm_;
 };
-}
+}  // namespace s21
 
-#endif 
+#endif

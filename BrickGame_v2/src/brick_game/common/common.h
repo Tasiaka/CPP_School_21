@@ -4,14 +4,14 @@
 #include <stdbool.h>
 
 typedef enum {
-    Start,
-    Pause,
-    Terminate,
-    Left,
-    Right,
-    Up,
-    Down,
-    Action
+  Start,
+  Pause,
+  Terminate,
+  Left,
+  Right,
+  Up,
+  Down,
+  Action
 } UserAction_t;
 
 typedef struct {

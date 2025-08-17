@@ -1,123 +1,146 @@
-PROJECT        := brickgame
-ROOT_DIR       := ..
-SRC_DIR        := .
-BUILD_DIR      := $(ROOT_DIR)/build
+CPP      = g++
+CC       = gcc
+AR       = ar
+RANLIB   = ranlib
 
-BIN_PATH       := $(BUILD_DIR)/brickgame_cli
-
-CXX            ?= c++
-CC             ?= cc
-AR             ?= ar
-RANLIB         ?= ranlib
+CFLAGS   = -Wall -Werror -Wextra
+CPPFLAGS = $(CFLAGS) -std=c++17
+TESTFLAGS = -lpthread
+LDLIBS   = -fprofile-arcs -ftest-coverage
 
 
-CXXFLAGS       ?= -std=c++17 -Wall -Wextra -Werror -pedantic -O2
-CFLAGS         ?= -std=c11  -Wall -Wextra -Werror -O2
-CPPFLAGS       ?= -I$(SRC_DIR)
-LIBS           ?= -lncurses
+DIR_TET = brick_game/tetris
+DIR_SN  = brick_game/snake
+DIR_GUI     = gui/cli
+DIR_BIN     = ./bin
+DIR_BUILD := build
+
+GTEST_INC = /opt/homebrew/opt/googletest/include
+GTEST_LIB = /opt/homebrew/opt/googletest/lib
+
+CHECK_INC = /opt/homebrew/opt/check/include
+CHECK_LIB = /opt/homebrew/opt/check/lib
+
+LIB_TETRIS = tetris.a
+LIB_SNAKE  = snake.a
 
 
-SNAKE_DIR      := brick_game/snake
-TETRIS_DIR     := brick_game/tetris
-CLI_DIR        := gui/cli
-
-LIB_SNAKE      := $(BUILD_DIR)/libbrickgame_snake.a
-LIB_TETRIS     := $(BUILD_DIR)/libbrickgame_tetris.a
-
-SNAKE_SRC := \
-  $(SNAKE_DIR)/snake_model.cc \
-  $(SNAKE_DIR)/snake_fsm.cc \
-  $(SNAKE_DIR)/snake_controller.cc \
-  $(SNAKE_DIR)/snake_adapter_c_api.cc
-
-CLI_SRC := \
-  $(CLI_DIR)/cli_view.cc \
-  $(CLI_DIR)/cli_main.cc \
-  $(CLI_DIR)/cli_hub.cc
+LLVM_COV = /opt/homebrew/opt/llvm/bin/llvm-cov
 
 
-TETRIS_SRC := \
-  $(TETRIS_DIR)/addition.c \
-  $(TETRIS_DIR)/controlling.c \
-  $(TETRIS_DIR)/figure.c \
-  $(TETRIS_DIR)/moving.c \
-  $(TETRIS_DIR)/score.c \
-  $(TETRIS_DIR)/tetris_adapter_cli.c
+SOURCES_C_TET   = $(wildcard $(DIR_TET)/*.c)
+
+SOURCES_CPP_SN  = $(wildcard $(DIR_SN)/*.cpp) $(wildcard $(DIR_SN)/*.cpp)
+
+SOURCES_CPP_CLI = $(wildcard $(DIR_GUI)/*.cpp) $(wildcard $(DIR_GUI)/*.cpp)
+
+SOURCES_TEST    = $(wildcard ./tests/*.cpp) $(wildcard ./tests/*.cpp)
 
 
-SNAKE_OBJ  := $(SNAKE_SRC:%.cc=$(BUILD_DIR)/%.o)
-CLI_OBJ    := $(CLI_SRC:%.cc=$(BUILD_DIR)/%.o)
-TETRIS_OBJ := $(TETRIS_SRC:%.c=$(BUILD_DIR)/%.o)
+OBJECTS_C_TET    = $(SOURCES_C_TET:.c=.o)
+OBJECTS_CPP_SN   = $(patsubst %.cpp,%.o,$(filter %.cpp,$(SOURCES_CPP_SN))) \
+                   $(patsubst %.cpp,%.o,$(filter %.cpp,$(SOURCES_CPP_SN)))
+OBJECTS_CPP_CLI  = $(patsubst %.cpp,%.o,$(filter %.cpp,$(SOURCES_CPP_CLI))) \
+                   $(patsubst %.cpp,%.o,$(filter %.cpp,$(SOURCES_CPP_CLI)))
 
 
-.PHONY: all clean install uninstall dist dvi tests run
+.PHONY: all console desktop test gcov_report install uninstall dvi dist clean
 
-all: $(BIN_PATH)
+all: desktop console
 
-$(BUILD_DIR)/%.o: %.cc
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+OBJS_CLI := gui/cli/cli_hub.o gui/cli/cli_main.o gui/cli/cli_view.o
 
-$(BUILD_DIR)/%.o: %.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+console: $(OBJS_CLI) snake.a tetris.a
+	mkdir -p ../build
+	$(CXX) $(CXXFLAGS) -o ../build/BrickGame_cli $^ -lncurses
+	rm -rf *.a
 
-$(LIB_SNAKE): $(SNAKE_OBJ)
-	@mkdir -p $(dir $@)
+desktop:
+	@mkdir -p ../build/desk
+	cd ../build/desk && qmake6 ../../src/gui/desktop
+	cd ../build/desk && make
+	rm -rf ../build/desk/*.o 
+	mv ../build/desk/BrickGame_desktop ../build/BrickGame_desktop
+
+
+$(LIB_TETRIS): $(OBJECTS_C_TET)
 	$(AR) rcs $@ $^
-	@$(RANLIB) $@ >/dev/null 2>&1 || true
+	$(RANLIB) $@
 
-ifeq ($(NO_TETRIS),1)
-TETRIS_LIB_SWITCH :=
-else
-TETRIS_LIB_SWITCH := $(LIB_TETRIS)
-endif
-
-$(LIB_TETRIS): $(TETRIS_OBJ)
-	@mkdir -p $(dir $@)
+$(LIB_SNAKE): $(OBJECTS_CPP_SN)
 	$(AR) rcs $@ $^
-	@$(RANLIB) $@ >/dev/null 2>&1 || true
+	$(RANLIB) $@
 
 
-$(BIN_PATH): $(LIB_SNAKE) $(TETRIS_LIB_SWITCH) $(CLI_OBJ)
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) $(CLI_OBJ) $(LIB_SNAKE) $(TETRIS_LIB_SWITCH) $(LIBS) -o $@
-	@echo "Built: $@"
+test: clean test_tetris test_snake
+	rm -f *.a *.o test_tetris test_snake tests/*.o
 
-run: $(BIN_PATH)
-	$(BIN_PATH)
+test_tetris: $(LIB_TETRIS)
+	$(CC)  $(CFLAGS) -I$(CHECK_INC) -c -o tests/test.o   tests/test.c
+	$(CC)  $(CFLAGS) -I$(CHECK_INC) -c -o tests/testik.o tests/testik.c
+	$(CPP) $(CFLAGS) tests/test.o tests/testik.o -o test_tetris tetris.a \
+	  -L$(CHECK_LIB) -lcheck -lm -lpthread
+	./test_tetris
+
+test_snake: $(LIB_SNAKE)
+	$(CPP) $(CPPFLAGS) -I$(GTEST_INC) -c -o tests/snake_gtest.o tests/snake_gtest.cpp
+	$(CPP) $(CPPFLAGS) tests/snake_gtest.o -o test_snake snake.a \
+	  -L$(GTEST_LIB) -lgtest -lgtest_main -lpthread
+	./test_snake
+
+GCOV_WRAPPER := .tools/gcov-llvm
+
+gcov_report: clean
+	make CFLAGS="$(CFLAGS) --coverage" CPPFLAGS="$(CPPFLAGS) --coverage" test_tetris
+	make CFLAGS="$(CFLAGS) --coverage" CPPFLAGS="$(CPPFLAGS) --coverage" test_snake
+
+	mkdir -p .tools
+	@echo '#!/bin/sh' >  $(GCOV_WRAPPER)
+	@echo 'exec "$(LLVM_COV)" gcov "$$@"' >> $(GCOV_WRAPPER)
+	chmod +x $(GCOV_WRAPPER)
+
+	rm -f coverage.info coverage.filtered.info
+	lcov --gcov-tool "$(GCOV_WRAPPER)" --directory . --capture --output-file coverage.info --ignore-errors inconsistent,unsupported,format,unused
+	lcov --remove coverage.info 'tests/*' '*.h' 'v1' -o coverage.filtered.info
+	mkdir -p coverage_report
+	genhtml coverage.filtered.info --output-directory coverage_report --ignore-errors category,unused
+	@xdg-open coverage_report/index.html >/dev/null 2>&1 || open coverage_report/index.html >/dev/null 2>&1 || true
+
+	rm -f *.a *.o test_tetris test_snake tests/*.o tests/*.gc* *.gc* brick_game/*/*.gc* brick_game/*/*.o coverage.*
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+%.o: %.cpp
+	$(CPP) $(CPPFLAGS) -c -o $@ $<
+
+%.o: %.cpp
+	$(CPP) $(CPPFLAGS) -c -o $@ $<
 
 
-PREFIX         ?= /usr/local
-DESTDIR        ?=
-
-install: all
-	@mkdir -p $(DESTDIR)$(PREFIX)/bin
-	@mkdir -p $(DESTDIR)$(PREFIX)/lib
-	@cp -f $(BIN_PATH) $(DESTDIR)$(PREFIX)/bin/
-	@cp -f $(LIB_SNAKE) $(DESTDIR)$(PREFIX)/lib/
-ifneq ($(NO_TETRIS),1)
-	@cp -f $(LIB_TETRIS) $(DESTDIR)$(PREFIX)/lib/
-endif
-	@echo "Installed to $(DESTDIR)$(PREFIX)"
+install: clean console desktop
+	@mkdir -p $(DIR_BIN)
+	cp build_desk/desktop $(DIR_BIN)
+	cp build_cli/console $(DIR_BIN)
 
 uninstall:
-	@rm -f $(DESTDIR)$(PREFIX)/bin/$(notdir $(BIN_PATH))
-	@rm -f $(DESTDIR)$(PREFIX)/lib/$(notdir $(LIB_SNAKE))
-ifneq ($(NO_TETRIS),1)
-	@rm -f $(DESTDIR)$(PREFIX)/lib/$(notdir $(LIB_TETRIS))
-endif
-	@echo "Uninstalled."
+	rm -rf $(DIR_BIN)
 
 dvi:
-	@echo "Generate docs here (e.g., doxygen)."
+	@true
 
 dist:
-	@tar czf $(PROJECT).tar.gz $(SRC_DIR) Makefile README.md || \
-		tar czf $(PROJECT).tar.gz $(SRC_DIR) Makefile
-
-tests:
-	@echo "Place unit tests here (e.g., gtest)."
+	@mkdir -p $(PROJECT)-2.0
+	cp -r brick_game gui Makefile $(PROJECT)-2.0
+	tar -czf $(PROJECT)-2.0.tar.gz $(PROJECT)-2.0
+	rm -rf $(PROJECT)-2.0
 
 clean:
-	@rm -rf $(BUILD_DIR) $(PROJECT).tar.gz
+	rm -f $(DIR_TET)/*.o $(DIR_SN)/*.o $(DIR_GUI)/*.o ./tests/*.o
+	rm -f $(LIB_TETRIS) $(LIB_SNAKE) test gcov_r
+	rm -rf build_cli build_desk coverage_report ../build desk .tools coverage_report
+	rm -f *.gcno *.gcda *.gcov test_* tests/*.o *.gc* brick_game/*/*.gc* tests/*.gc* coverage.* 
+
+style:
+	clang-format -i --style=Google brick_game/*/* gui/*/* tests/*
+

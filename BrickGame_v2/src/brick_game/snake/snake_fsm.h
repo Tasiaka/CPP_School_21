@@ -2,6 +2,7 @@
 #define SNAKE_FSM
 
 #include <cstdint>
+
 #include "snake_model.h"
 
 namespace s21 {
@@ -20,10 +21,14 @@ class SnakeFSM {
  public:
   explicit SnakeFSM(SnakeModel* model);
 
-  void SetAction(UserAction_t action, bool hold);  
-  void Step();                                     
+  void SetAction(UserAction_t action, bool hold);
+  void Step();
 
-  GameInfo_t CurrentInfo() const { GameInfo_t gi{}; model_->CopyToGameInfo(gi); return gi; }
+  GameInfo_t CurrentInfo() const {
+    GameInfo_t gi{};
+    model_->CopyToGameInfo(gi);
+    return gi;
+  }
 
  private:
   void HandleStart();
@@ -45,6 +50,6 @@ class SnakeFSM {
   uint64_t last_ms_{0};
 };
 
-}
+}  // namespace s21
 
-#endif 
+#endif

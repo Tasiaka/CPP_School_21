@@ -1,11 +1,13 @@
 #include "cli_view.h"
+
 #include <ncurses.h>
+
 #include <chrono>
 #include <cstring>
+
 #include "cli_hub.h"
 
 namespace {
-
 
 unsigned long long NowMs() {
   using namespace std::chrono;
@@ -65,7 +67,8 @@ static void DrawNextTetris(const GameInfo_t& gi) {
       }
 }
 
-void DrawSidebar(const GameInfo_t& gi, const char* game_name, bool snake_active) {
+void DrawSidebar(const GameInfo_t& gi, const char* game_name,
+                 bool snake_active) {
   mvaddstr(7, 30, "GAME");
   mvaddstr(8, 32, game_name);
   mvaddstr(11, 30, "BEST SCORE");
@@ -108,8 +111,6 @@ static void DrawFieldTetris(const GameInfo_t& gi) {
       }
 }
 
-
-
 void DrawField(const GameInfo_t& gi, bool snake_active) {
   if (snake_active) {
     DrawFieldSnake(gi);
@@ -118,7 +119,7 @@ void DrawField(const GameInfo_t& gi, bool snake_active) {
   }
 }
 
-}
+}  // namespace
 
 void DrawGame(const GameInfo_t& gi) {
   clear();
@@ -134,7 +135,6 @@ void DrawGame(const GameInfo_t& gi) {
 
   if (snake_active && gi.level == 10 && gi.score >= 200) {
     DrawBannerCentered("Y O U   W I N");
-    
   }
 
   refresh();
@@ -143,7 +143,7 @@ void DrawGame(const GameInfo_t& gi) {
 static void ProcessInputForActiveGame(int ch) {
   if (s21::IsSnakeActive()) {
     switch (ch) {
-      case ' ': { 
+      case ' ': {
         g_lastSpaceMs = NowMs();
         if (!g_actionActive) {
           g_actionActive = true;
@@ -228,22 +228,22 @@ void GameLoopCli() {
 }
 
 void MainMenuLoop() {
-  timeout(-1);  
+  timeout(-1);
 
   while (true) {
     clear();
-    mvaddstr(3,  6, "BRICK GAME");
-    mvaddstr(6,  6, "[1] Snake");
-    mvaddstr(7,  6, "[2] Tetris");
-    mvaddstr(9,  6, "q - quit");
+    mvaddstr(3, 6, "BRICK GAME");
+    mvaddstr(6, 6, "[1] Snake");
+    mvaddstr(7, 6, "[2] Tetris");
+    mvaddstr(9, 6, "q - quit");
     refresh();
 
     int ch = getch();
     if (ch == '1') {
       s21::SelectGame(s21::GameKind::Snake);
-      halfdelay(1);   
-      GameLoopCli();       
-      timeout(-1);        
+      halfdelay(1);
+      GameLoopCli();
+      timeout(-1);
     } else if (ch == '2') {
       s21::SelectGame(s21::GameKind::Tetris);
       halfdelay(1);
